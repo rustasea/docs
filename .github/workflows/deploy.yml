@@ -33,22 +33,30 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Verify build output
+      - name: Prepare Pages artifact
         run: |
-          test -f .docu/dist/index.html
-          test -d .docu/dist/docs
-          echo "pages: $(find .docu/dist -name '*.html' | wc -l)"
+          test -f .docu/dist/docs/index.html
+          test -d .docu/dist/docs/assets
+          rm -rf .pages
+          mkdir -p .pages
+          cp -R .docu/dist/docs/. .pages/
+          cp .docu/dist/404.html .pages/404.html
+          cp .docu/dist/.nojekyll .pages/.nojekyll
+          cp .docu/dist/_headers .pages/_headers
+          test -f .pages/index.html
+          test -d .pages/assets
+          echo "pages: $(find .pages -name '*.html' | wc -l)"
 
       - name: Fail on localhost leaks
         run: |
-          if grep -rq "localhost:3000" .docu/dist; then
+          if grep -rq "localhost:3000" .pages; then
             echo "::error::Build output still references localhost — check meta.baseURL"
             exit 1
           fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .docu/dist
+          path: .pages
 
   deploy:
     environment:
