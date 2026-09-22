@@ -1,0 +1,16 @@
+---
+title: My Docs
+description: Documentation powered by DocuBook Flame.
+---
+
+Welcome to **My Docs** — a static documentation site built with [DocuBook Flame](https://www.docubook.pro/).
+
+Flame compiles the markdown in `docs/` into flat static HTML. No server, no database, no runtime — deploy anywhere.
+
+```mermaid
+flowchart TD
+    A["docs/*.md"] --> B["flame build"]
+    B --> C["Static HTML + assets"]
+    C --> D["Vercel · Netlify · GitHub Pages · S3"]
+```
+

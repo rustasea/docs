@@ -1,0 +1,5 @@
+node_modules
+.docu/dist
+.docu/build-cache.json
+.env
+*.DS_Store

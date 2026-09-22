@@ -1,0 +1,110 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@docubook/flame/docu.schema.json",
+  "meta": {
+    "title": "My Docs",
+    "description": "Documentation powered by DocuBook Flame",
+    "baseURL": "http://localhost:3000",
+    "favicon": "/docs/assets/images/favicon.ico",
+    "ogImage": "/docs/assets/images/og.png"
+  },
+  "sidebar": {
+    "context": "separator"
+  },
+  "themes": {
+    "colors": "default"
+  },
+  "home": {
+    "hero": {
+      "tagline": "#MyDocs",
+      "headline": "Documentation",
+      "description": "Welcome to your documentation site powered by DocuBook Flame.",
+      "actions": [
+        {
+          "text": "Get Started",
+          "link": "/docs",
+          "theme": "primary"
+        },
+        {
+          "text": "GitHub",
+          "link": "https://github.com/gitfromwildan",
+          "theme": "ghost",
+          "icon": "github"
+        }
+      ]
+    },
+    "features": [
+      {
+        "icon": "Zap",
+        "title": "Lightning Fast",
+        "description": "Powered by Bun for instant builds and hot module replacement.",
+        "link": "/docs"
+      },
+      {
+        "icon": "Paintbrush",
+        "title": "Themeable",
+        "description": "Customize with Tailwind CSS and DaisyUI for beautiful documentation.",
+        "link": "#"
+      },
+      {
+        "icon": "Search",
+        "title": "Full-Text Search",
+        "description": "Built-in search for easy content discovery.",
+        "link": "#"
+      }
+    ]
+  },
+  "navbar": {
+    "logo": {
+      "src": "/docs/assets/images/docu.svg",
+      "alt": "DocuBook"
+    },
+    "logoText": "My Docs",
+    "menu": [
+      {
+        "title": "Home",
+        "href": "/"
+      },
+      {
+        "title": "Docs",
+        "href": "/docs"
+      }
+    ]
+  },
+  "footer": {
+    "social": []
+  },
+  "repo": {
+    "url": "https://github.com/DocuBook/docubook",
+    "path": "blob/main/{filePath}",
+    "edit": false
+  },
+  "routes": [
+    {
+      "title": "Getting Started",
+      "href": "/getting-started",
+      "noLink": true,
+      "context": {
+        "icon": "Rocket",
+        "title": "Getting Started"
+      },
+      "items": [
+        { "title": "Overview", "href": "/overview" },
+        { "title": "Configuration", "href": "/configuration" }
+      ]
+    },
+    {
+      "title": "Guide",
+      "href": "/guide",
+      "noLink": true,
+      "context": {
+        "icon": "BookOpen",
+        "title": "Guide"
+      },
+      "items": [
+        { "title": "Components", "href": "/components" },
+        { "title": "Routing", "href": "/routing" },
+        { "title": "Deployment", "href": "/deployment" }
+      ]
+    }
+  ]
+}
