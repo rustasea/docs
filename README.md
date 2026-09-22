@@ -1,4 +1,4 @@
-<p align="center"><img src="/docs/assets/images/logo.png" width="460" alt="RustaSea Logo">
+<p align="center"><img src="/docs/assets/images/logo.svg" width="460" alt="RustaSea Logo">
 </p>
 
 <h1 align="center" style="font-size: 32px;">

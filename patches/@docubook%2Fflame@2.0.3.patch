@@ -1,10 +1,81 @@
-
-
-
+diff --git a/.docu/components/DocsLayout.tsx b/.docu/components/DocsLayout.tsx
+index 18ba88771707226230f707e4c2310cbae0b8f7cb..b5f41c94bb8d857e6c8c4929ac08a74157f5ea81 100644
+--- a/.docu/components/DocsLayout.tsx
++++ b/.docu/components/DocsLayout.tsx
+@@ -1,5 +1,6 @@
+ import React from "react";
+ import { loadDocuConfig } from "../node/paths";
++import { docsNavHref } from "../node/utils";
+ import Menu from "./Menu";
+ 
+ const docuConfig = loadDocuConfig();
+@@ -50,7 +51,7 @@ export function DocsLayout({ children, repoUrl, pathname = "/docs" }: DocsLayout
+                 "a",
+                 {
+                   key: item.title,
+-                  href: item.href,
++                  href: docsNavHref(item.href),
+                   className: `flex items-center gap-1 hover:text-base-content transition-colors${isDocsActive ? " text-primary font-semibold" : ""}`,
+                   ...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {}),
+                 },
+diff --git a/.docu/components/Navbar.tsx b/.docu/components/Navbar.tsx
+index c0f712d2cf2f6d64757526a8ec4ce93ef929c805..c8259ded789620b49ad9385924e4ef56a1d49896 100644
+--- a/.docu/components/Navbar.tsx
++++ b/.docu/components/Navbar.tsx
+@@ -1,7 +1,7 @@
+ import type { ReactNode } from "react";
+ import { useState } from "react";
+ import Anchor from "./Anchor";
+-import { cn } from "../node/utils";
++import { cn, docsNavHref } from "../node/utils";
+ import { config as docuConfig } from "../node/client-routes";
+ import {
+   Navbar as BaseNavbar,
+@@ -85,7 +85,7 @@ export function NavMenuLink({ item, isActive }: { item: BaseNavMenuItem; isActiv
+ export function NavItem({ item }: { item: BaseNavMenuItem }) {
+   return (
+     <Anchor
+-      href={item.href}
++      href={docsNavHref(item.href)}
+       activeClassName="text-primary font-semibold"
+       className="text-sm font-medium"
+     >
+@@ -126,7 +126,7 @@ export function MobileMenuToggle({
+           {menu.map((item) => (
+             <li key={item.title + item.href}>
+               <Anchor
+-                href={item.href}
++                href={docsNavHref(item.href)}
+                 activeWhen={
+                   currentPath
+                     ? (path: string) =>
+diff --git a/.docu/components/Search.tsx b/.docu/components/Search.tsx
+index 1220f8b4ce09b8db73bf810635303ae3400e4b02..8335062ddbff43d8dba5d5a697dc90c440021f04 100644
+--- a/.docu/components/Search.tsx
++++ b/.docu/components/Search.tsx
+@@ -48,7 +48,8 @@ let cmdKRegistered = false;
+ 
+ async function loadIndex(): Promise<SearchRecord[]> {
+   if (indexCache) return indexCache;
+-  const res = await fetch("/assets/search-index.json");
++  const sitePrefix = window.location.pathname.split("/").slice(0, 2).join("/");
++  const res = await fetch(`${sitePrefix}/assets/search-index.json`);
+   indexCache = await res.json();
+   return indexCache!;
+ }
 diff --git a/.docu/components/Sidebar.tsx b/.docu/components/Sidebar.tsx
-index 6fa972603576d8be4621e28636ad974847cf4779..3c2b1b99c82bad28c5810967597de5ba8c6622c6 100644
+index 6fa972603576d8be4621e28636ad974847cf4779..47342cfb8c38a63fef1c150a813c5b2627d89dac 100644
 --- a/.docu/components/Sidebar.tsx
 +++ b/.docu/components/Sidebar.tsx
+@@ -10,7 +10,7 @@ import {
+   FileText,
+ } from "lucide-react";
+ import { Dropdown } from "@docubook/ui-react/dropdown";
+-import { cn } from "../node/utils";
++import { cn, docsNavHref } from "../node/utils";
+ import Anchor from "./Anchor";
+ import { Context } from "./Context";
+ import Menu from "./Menu";
 @@ -41,7 +41,7 @@ function DesktopSidebar({ className, repoUrl }: { className?: string; repoUrl?:
      <div className={cn("flex h-full flex-col", className)}>
        {/* Logo */}
@@ -14,6 +85,15 @@ index 6fa972603576d8be4621e28636ad974847cf4779..3c2b1b99c82bad28c5810967597de5ba
            {docuConfig.navbar?.logo?.src && (
              <img
                src={docuConfig.navbar.logo.src}
+@@ -161,7 +161,7 @@ export function MobileBar({
+                 className="text-base-content/80 hover:text-base-content hover:bg-base-200 cursor-pointer"
+               >
+                 <Anchor
+-                  href={item.href}
++                  href={docsNavHref(item.href)}
+                   activeWhen={(path: string) =>
+                     path === item.href || path.startsWith(item.href + "/")
+                   }
 diff --git a/.docu/node/build.ts b/.docu/node/build.ts
 index dac20039cb359e9a5c13b8e3860eda93d11e1443..e8c10cff2cfb03f828e8836a80ebef68198e4070 100644
 --- a/.docu/node/build.ts
@@ -92,3 +172,73 @@ index dac20039cb359e9a5c13b8e3860eda93d11e1443..e8c10cff2cfb03f828e8836a80ebef68
      }));
      await builder.runOnEnd(pages, { assetManifest, outDir: DIST_DIR });
    }
+diff --git a/.docu/node/html.shared.ts b/.docu/node/html.shared.ts
+index ee529c4293fdcf295d3025692c0a6217569d395b..01acd85cf3e25c75986093a989b0a4721ec25dc1 100644
+--- a/.docu/node/html.shared.ts
++++ b/.docu/node/html.shared.ts
+@@ -62,12 +62,18 @@ export function htmlShell(opts: HtmlShellOptions): string {
+   const headInjection = headExtra?.length ? `\n  ${headExtra.join("\n  ")}` : "";
+   const bodyInjection = bodyExtra?.length ? `\n  ${bodyExtra.join("\n  ")}` : "";
+   const depthPrefix = depth === 0 ? "" : "../".repeat(depth);
+-  const assetPrefix = absoluteAssets ? "/assets/" : depthPrefix + "assets/";
++  const assetPrefix = absoluteAssets ? "/docs/assets/" : depthPrefix + "assets/";
+   const clientScript = js
+     ? `\n  <link rel="modulepreload" href="${escapeHtml(assetPrefix + js)}">\n  <script type="module"${nonceAttr} src="${escapeHtml(assetPrefix + js)}"></script>`
+     : "";
+   const resolvePath = (path: string) =>
+-    absoluteAssets ? path : path.startsWith("/") ? depthPrefix + path.slice(1) : path;
++    absoluteAssets
++      ? path
++      : path.startsWith("/docs/")
++        ? depthPrefix + path.slice("/docs/".length)
++        : path.startsWith("/")
++          ? depthPrefix + path.slice(1)
++          : path;
+ 
+   // Build SEO meta tags (OG, Twitter, canonical)
+   let seoTags = "";
+diff --git a/.docu/node/html.ts b/.docu/node/html.ts
+index a3c33e58417f178e6568f01b6e97fcf1ad085a26..68d4033b8d05657f14bfce8db61f8b0a7729429c 100644
+--- a/.docu/node/html.ts
++++ b/.docu/node/html.ts
+@@ -24,12 +24,18 @@ export function htmlShell(opts: HtmlShellOptions): string {
+   const headInjection = headExtra?.length ? `\n  ${headExtra.join("\n  ")}` : "";
+   const bodyInjection = bodyExtra?.length ? `\n  ${bodyExtra.join("\n  ")}` : "";
+   const depthPrefix = depth === 0 ? "" : "../".repeat(depth);
+-  const assetPrefix = absoluteAssets ? "/assets/" : depthPrefix + "assets/";
++  const assetPrefix = absoluteAssets ? "/docs/assets/" : depthPrefix + "assets/";
+   const clientScript = js
+     ? `\n  <link rel="modulepreload" href="${Bun.escapeHTML(assetPrefix + js)}">\n  <script type="module"${nonceAttr} src="${Bun.escapeHTML(assetPrefix + js)}"></script>`
+     : "";
+   const resolvePath = (path: string) =>
+-    absoluteAssets ? path : path.startsWith("/") ? depthPrefix + path.slice(1) : path;
++    absoluteAssets
++      ? path
++      : path.startsWith("/docs/")
++        ? depthPrefix + path.slice("/docs/".length)
++        : path.startsWith("/")
++          ? depthPrefix + path.slice(1)
++          : path;
+ 
+   // Build SEO meta tags (OG, Twitter, canonical)
+   let seoTags = "";
+diff --git a/.docu/node/utils.ts b/.docu/node/utils.ts
+index a980918be7649b1cb9001000334f9ae096e5abcc..b930acb3203e8c053fcdcc82368c42a81c438db0 100644
+--- a/.docu/node/utils.ts
++++ b/.docu/node/utils.ts
+@@ -69,6 +69,15 @@ export function docsHtmlHref(path: string): string {
+   return `${path}.html`;
+ }
+ 
++/** Navbar/menu links: internal `/docs/...` targets are flat `.html` files on
++ *  static hosts — suffix them. The docs root `/docs` stays extensionless
++ *  (directory index). External links pass through unchanged. */
++export function docsNavHref(href: string): string {
++  if (isExternalUrl(href)) return href;
++  if (href.startsWith("/docs/") && !href.endsWith(".html")) return `${href}.html`;
++  return href;
++}
++
+ /** Map a `/docs{.html,/*.html}` request back to its extensionless route (dev server).
+  *  Handles both `/docs/*.html` (pages) and `/docs.html` (edge case). */
+ export function stripDocsHtmlSuffix(pathname: string): string {
