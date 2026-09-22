@@ -41,6 +41,10 @@ jobs:
           mkdir -p .pages
           cp -R .docu/dist/assets .pages/assets
           cp -R .docu/dist/docs/. .pages/
+          # The flattened docs index moves up one directory, so fix only its
+          # relative bundle paths; nested pages already resolve ../assets.
+          sed -i 's#\.\./assets/#assets/#g' .pages/index.html
+          find .pages -name '*.html' -exec sed -i 's#/docs/docs#/docs#g' {} +
           cp .docu/dist/404.html .pages/404.html
           if [ -f .docu/dist/.nojekyll ]; then
             cp .docu/dist/.nojekyll .pages/.nojekyll
@@ -54,6 +58,12 @@ jobs:
           test -n "$(find .pages/assets -maxdepth 1 -name '*.css' -print -quit)"
           test -n "$(find .pages/assets -maxdepth 1 -name '*.js' -print -quit)"
           test -d .pages/assets/images
+          grep -q 'assets/.*\.css' .pages/index.html
+          grep -q 'assets/.*\.js' .pages/index.html
+          if grep -R '/docs/docs' .pages; then
+            echo "::error::Generated output contains duplicated /docs path"
+            exit 1
+          fi
           echo "pages: $(find .pages -name '*.html' | wc -l)"
 
       - name: Fail on localhost leaks
