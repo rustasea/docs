@@ -33,49 +33,25 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Prepare Pages artifact
+      - name: Verify build output
         run: |
+          test -f .docu/dist/index.html
           test -f .docu/dist/docs/index.html
-          test -d .docu/dist/docs/assets
-          rm -rf .pages
-          mkdir -p .pages
-          cp -R .docu/dist/assets .pages/assets
-          cp -R .docu/dist/docs/. .pages/
-          # The flattened docs index moves up one directory, so fix only its
-          # relative bundle paths; nested pages already resolve ../assets.
-          sed -i 's#\.\./assets/#assets/#g' .pages/index.html
-          find .pages -name '*.html' -exec sed -i 's#/docs/docs#/docs#g' {} +
-          cp .docu/dist/404.html .pages/404.html
-          if [ -f .docu/dist/.nojekyll ]; then
-            cp .docu/dist/.nojekyll .pages/.nojekyll
-          else
-            touch .pages/.nojekyll
-          fi
-          if [ -f .docu/dist/_headers ]; then
-            cp .docu/dist/_headers .pages/_headers
-          fi
-          test -f .pages/index.html
-          test -n "$(find .pages/assets -maxdepth 1 -name '*.css' -print -quit)"
-          test -n "$(find .pages/assets -maxdepth 1 -name '*.js' -print -quit)"
-          test -d .pages/assets/images
-          grep -q 'assets/.*\.css' .pages/index.html
-          grep -q 'assets/.*\.js' .pages/index.html
-          if grep -R '/docs/docs' .pages; then
-            echo "::error::Generated output contains duplicated /docs path"
-            exit 1
-          fi
-          echo "pages: $(find .pages -name '*.html' | wc -l)"
+          test -d .docu/dist/assets
+          test -n "$(find .docu/dist/assets -maxdepth 1 -name '*.css' -print -quit)"
+          test -n "$(find .docu/dist/assets -maxdepth 1 -name '*.js' -print -quit)"
+          echo "pages: $(find .docu/dist -name '*.html' | wc -l)"
 
       - name: Fail on localhost leaks
         run: |
-          if grep -rq "localhost:3000" .pages; then
+          if grep -rq "localhost:3000" .docu/dist; then
             echo "::error::Build output still references localhost — check meta.baseURL"
             exit 1
           fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .pages
+          path: .docu/dist
 
   deploy:
     environment:
