@@ -1,0 +1,85 @@
+---
+title: Installation
+description: Scaffold a RustaSea application, pick a presentation variant, and boot it.
+---
+
+## Requirements
+
+- Rust **1.88+** (the workspace MSRV floor)
+- Cargo
+
+Optional, depending on what you enable:
+
+| Tool                                     | Needed for                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| PostgreSQL (or `pgvector/pgvector:pg16`) | ORM integration tests, vector search                             |
+| Redis                                    | `redis` cache and queue drivers                                  |
+| Docker                                   | `testcontainers`-backed integration tests, the compose dev stack |
+
+## Create an application
+
+```bash
+cargo install rustasea
+cargo rustasea new example-app --variant blade
+cd example-app
+cargo run
+```
+
+Variants:
+
+| Variant    | Presentation layer         |
+| ---------- | -------------------------- |
+| `blade`    | askama templates (default) |
+| `react`    | Dioxus WASM + Inertia      |
+| `vue`      | Leptos WASM + Inertia      |
+| `svelte`   | Sycamore WASM + Inertia    |
+| `livewire` | askama components + HTMX   |
+
+## Docker development stack
+
+The framework monorepo ships a Sail-parity container stack. From a workspace checkout:
+
+```bash
+docker-compose up -d
+
+# live reload (bind-mounted sources, cargo-watch)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+Or via `xtask`:
+
+```bash
+cargo xtask docker:up     # up -d, then prints service URLs
+cargo xtask docker:logs
+cargo xtask docker:down
+```
+
+| Service    | Image                    | Port                          |
+| ---------- | ------------------------ | ----------------------------- |
+| `app`      | built from `Dockerfile`  | `8000` (with `/health` probe) |
+| `postgres` | `pgvector/pgvector:pg16` | `5432`                        |
+| `redis`    | `redis:7-alpine`         | `6379`                        |
+| `minio`    | `minio/minio`            | `9000`, `9001`                |
+| `mailpit`  | `axllent/mailpit`        | `1025`, `8025`                |
+
+Copy `.env.example` to `.env` to override any value.
+
+## Development checks
+
+```bash
+cargo xtask ci            # fmt + clippy + deps:check + lines:check + check-cycles
+cargo test --workspace
+cargo deny check          # license + advisory + ban gate
+cargo audit
+cargo xtask migrate       # run migrations
+```
+
+:::tip
+Formatting violations fail the build. Run `cargo fmt --all` before pushing, or `cargo xtask fmt` to check.
+:::
+
+Docker-gated integration tests are opt-in:
+
+```bash
+cargo test -p rustasea --features integration -- --ignored
+```

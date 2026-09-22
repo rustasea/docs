@@ -1,0 +1,61 @@
+---
+title: Auth & Validation
+description: Guards, sessions, authorization attributes, CSRF protection, and validation rules.
+---
+
+## Guards
+
+Auth ships JWT (via `jsonwebtoken`) and session guards, with `argon2` for password hashing and `tower-sessions` for the session store.
+
+| Operation     | Methods                           |
+| ------------- | --------------------------------- |
+| Session       | `login`, `loginUsingId`, `logout` |
+| Token         | `parse`, `refresh`                |
+| Current user  | `user`, `id`                      |
+| Extensibility | `Auth::extend` for custom guards  |
+
+Guard mismatches return a typed `Error::GuardMismatch` rather than an opaque failure.
+
+## Authorization
+
+The `#[authorize]` attribute resolves through the router's `AuthorizeRegistry` and is applied during dispatch, alongside `#[middleware]`.
+
+```rust
+#[authorize(PostPolicy::update)]
+async fn update(State(state): State<AppState>, Path(id): Path<i64>) -> Result<Json<Post>> { /* ... */ }
+```
+
+## CSRF protection
+
+Request forgery protection is **origin-aware**: `PreventRequestForgery` inspects `Sec-Fetch-Site` and rejects cross-site `POST`s that do not carry a valid origin signal.
+
+## Validation
+
+Validation combines `validator` derive macros with the custom `rustasea-validation` crate, which adds `ErrorBag` and FormRequest semantics.
+
+| Feature       | Detail                                          |
+| ------------- | ----------------------------------------------- |
+| Rules         | Strict `in_array`, `contains`, `doesnt_contain` |
+| Form requests | `ErrorBag` aggregation for request classes      |
+| Attribute     | `#[validate]` proc-macro                        |
+| Generators    | `make:request`, `make:middleware`               |
+
+```rust
+#[derive(Validate)]
+struct StorePostRequest {
+    #[validate(length(min = 3, max = 120))]
+    title: String,
+    #[validate(length(min = 1))]
+    body: String,
+}
+```
+
+## Sessions and hardening
+
+- The session store serializes to **JSON** by default (not a PHP-style format).
+- Deserialization uses a security allow-list.
+- The cache prefix is hyphenated, and the throttle layer is configured per route.
+
+:::info
+M3 is partial. JWT, CSRF, throttle, validation, and the `tower-sessions`-backed `SessionGuard` are implemented, and the declarative attributes are consumed at runtime.
+:::

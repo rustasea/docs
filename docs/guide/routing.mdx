@@ -1,27 +1,61 @@
 ---
-title: Routing
-description: How Flame maps markdown files to static pages.
+title: Routing & HTTP
+description: The axum-backed router, route groups, domain-aware dispatch, middleware, and introspection.
 ---
 
-Flame uses **filesystem-based routing** — every markdown file in `docs/` compiles to a matching `.html` path:
+Routing lives in `routes/web.rs` and is backed by `axum` with typed extractors. The router DSL supports `get`, `post`, `put`, `delete`, `patch`, `options`, and `any`, plus route groups with prefix and naming.
 
+## Scope
+
+| Area           | Capability                                                                     |
+| -------------- | ------------------------------------------------------------------------------ |
+| Methods        | `get` / `post` / `put` / `delete` / `patch` / `options` / `any`                |
+| Groups         | Prefix, naming, `resource` helper                                              |
+| Domain routing | Domain-aware dispatch; domain catch-all routes do not shadow non-domain routes |
+| Middleware     | Full stack including `throttle` and `cors`                                     |
+| Requests       | Typed extractors, `Json` and `View` responses                                  |
+| Introspection  | `route:list` with middleware and binding fields                                |
+| HTTP client    | `reqwest` wrapper with Laravel-style `throw` / `try_throw` callbacks           |
+
+## Route introspection
+
+`cargo artisan route:list` renders the **live** 6-column route table published by the application at boot:
+
+| Method | URI               | Name          | Action                 | Middleware        | Binding |
+| ------ | ----------------- | ------------- | ---------------------- | ----------------- | ------- |
+| GET    | `/examples/posts` | `posts.index` | `PostController@index` | `web`             | —       |
+| POST   | `/examples/posts` | `posts.store` | `PostController@store` | `web`, `throttle` | —       |
+
+`route:list --json` emits the same metadata for tooling and agents. `openapi:generate` derives an OpenAPI 3.1 spec from the same table.
+
+## Declarative attributes
+
+Proc-macro attributes keep cross-cutting concerns next to the handler:
+
+```rust
+#[middleware(auth)]
+#[authorize(PostPolicy::update)]
+async fn update(State(state): State<AppState>, Path(id): Path<i64>) -> Json<Post> { /* ... */ }
 ```
-docs/
-├── index.mdx                       → /docs/index.html
-├── getting-started/
-│   ├── overview.mdx                → /docs/getting-started/overview.html
-│   └── configuration.mdx           → /docs/getting-started/configuration.html
-└── guide/
-    ├── components.mdx              → /docs/guide/components.html
-    └── routing.mdx                 → /docs/guide/routing.html
+
+`#[middleware]` resolves through the router's `MiddlewareRegistry` and `#[authorize]` through the `AuthorizeRegistry`; both are applied during dispatch.
+
+## Rate limiting and CORS
+
+- Rate limiting uses a fluent limiter — `limit.perMinute().by(ip)` — mapped onto a `Throttle` layer.
+- CORS is configured through `config/cors.toml` (`rustasea_http::CorsConfig`), restrictive by default.
+
+## HTTP client
+
+The `reqwest` wrapper implements Laravel-style callbacks and a typed `HttpError`, and enforces an idle (inter-chunk) timeout for streamed bodies.
+
+```rust
+let response = Http::get("https://api.example.com/users")
+    .throw()
+    .send()
+    .await?;
 ```
 
-## Add a page
-
-1. Create `docs/guide/faq.mdx`
-2. Add frontmatter: `title` and `description`
-3. Write markdown — the page appears in the sidebar and search automatically
-
-## Sidebar order
-
-When `routes: []`, Flame scans `docs/` and builds the sidebar from the directory structure. Define `routes` in `docu.json` for a custom order and grouped sections — see this project's `docu.json` for a working example.
+:::info
+URL generation and implicit route-model binding remain open in M1 — route registration stays manual after generating a controller.
+:::

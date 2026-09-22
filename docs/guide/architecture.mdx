@@ -1,0 +1,110 @@
+---
+title: Architecture
+description: Crate layout, the application container, service provider DAG, and milestone plan.
+---
+
+## Design principles
+
+| Principle                     | Meaning                                                     |
+| ----------------------------- | ----------------------------------------------------------- |
+| Convention over configuration | Sensible defaults with explicit opt-out                     |
+| Type safety as a feature      | Generics, lifetimes, and traits replace runtime `any` blobs |
+| Zero-cost ergonomics          | Expressive APIs that compile away where possible            |
+| Incremental adoption          | Use one crate or the full stack                             |
+
+## Workspace layout
+
+One crate per milestone domain; application code lives in `app/`:
+
+::::tree
+rustasea/
+├── bootstrap/
+│   ├── app.rs                     # Application::configure()
+│   ├── providers.rs               # provider registry
+│   └── commands.rs                # CLI command registry
+├── config/                        # auto-discovered *.toml
+├── routes/web.rs                  # route definitions
+├── database/{migrations,seeders}/
+├── resources/views/
+├── crates/                        # 42 framework crates
+├── xtask/                         # workspace dev tasks
+└── app/                           # application layer
+    ├── http/{controllers,middleware}/
+    ├── models/
+    ├── providers/
+    ├── jobs/ · events/ · listeners/
+    ├── actions/
+    └── ai/{agents,tools}/
+::::
+
+The canonical crate inventory records **42 crates under `crates/` + `xtask` (43 workspace packages)**. `Cargo.toml` with `members = ["crates/*", "xtask"]` is the mechanical source of truth.
+
+## Crate map by milestone
+
+| Milestone                | Crates                                                                                                                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 Bootstrap & Core      | `rustasea`, `rustasea-foundation`, `rustasea-config`                                                                                                                                                                              |
+| M1 Routing & HTTP        | `rustasea-router`, `rustasea-http`, `rustasea-openapi`                                                                                                                                                                            |
+| M2 ORM & Database        | `rustasea-orm`, `rustasea-macros`, `rustasea-activitylog`, `rustasea-mongo`                                                                                                                                                       |
+| M3 Auth & Validation     | `rustasea-auth`, `rustasea-validation`, `rustasea-i18n`, `rustasea-authlog`, `rustasea-timezone`                                                                                                                                  |
+| M4 Queue, Cache & Events | `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule`, `rustasea-queue-dashboard`, `rustasea-debugbar`                                                                                                       |
+| M5 DX, CLI & Testing     | `rustasea-cli`, `rustasea-testing`, `rustasea-logging`, `rustasea-action`, `rustasea-modules`, `rustasea-scaffold`                                                                                                                |
+| M6 Advanced              | `rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai`, `rustasea-jsonapi`, `rustasea-mail`, `rustasea-excel`, `rustasea-image`, `rustasea-google`, `rustasea-view`, `rustasea-inertia*`, `rustasea-livewire` |
+
+## The container and service providers
+
+Providers follow an explicit `register` → `boot` lifecycle with **DAG ordering**. The framework runs a real topological sort with typed cycle detection (`BootError::DependencyCycle`), and `xtask check-cycles` validates the workspace DAG in CI.
+
+```rust
+// bootstrap/app.rs (shape)
+Application::configure()
+    .with_providers([AppServiceProvider, RouteServiceProvider])
+    .with_routes(routes::web::register)
+    .run()
+    .await
+```
+
+Unlike Goravel's global facades, state is passed explicitly: `AppState` reaches handlers through `axum::extract::State` backed by `Arc`/`OnceLock` — no global mutable statics.
+
+## Feature gates
+
+The `rustasea` umbrella crate re-exports the whole framework, but several crates stay behind opt-in features so a core build never links their dependency trees (pay-for-what-you-use).
+
+| Feature                                      | Exposes                                                          |
+| -------------------------------------------- | ---------------------------------------------------------------- |
+| `modules`                                    | Modular application registry, `make:module`, `module:*` commands |
+| `action`                                     | Action pattern adapters for HTTP/queue/CLI/events                |
+| `google`                                     | Service-account auth with cached OAuth2 tokens                   |
+| `storage-sftp`                               | Pure-Rust `russh` SFTP disk                                      |
+| `excel`                                      | Excel/CSV import-export with queued jobs                         |
+| `image`                                      | Image transform pipeline with EXIF auto-orient                   |
+| `debugbar`                                   | Dev request profiler                                             |
+| `queue-dashboard`                            | Queue metrics history + failed-job surface                       |
+| `mongo`                                      | MongoDB document store                                           |
+| `ai` / `ai-search` / `ai-storage` / `ai-mcp` | AI SDK, Agent/Tool contracts, MCP server                         |
+| `view` / `view-runtime-templates`            | askama (default) and minijinja (runtime)                         |
+| `inertia` / `inertia-client`                 | Inertia server + WASM client protocol                            |
+| `livewire`                                   | Livewire analogue (askama components, HTMX swaps)                |
+| `browser`                                    | WebDriver e2e harness                                            |
+| `integration`                                | Docker-backed Postgres integration tests                         |
+| `full`                                       | Every server-side presentation layer + scaffolder                |
+
+Always compiled (no feature gate): `rustasea-i18n`, `rustasea-activitylog`, `rustasea-authlog`, and `rustasea-search` (only its `pgvector` backend stays opt-in).
+
+## Milestones
+
+Milestones are dependency-ordered — each builds only on predecessors, with no cycles.
+
+| Milestone | Focus                                                          |
+| --------- | -------------------------------------------------------------- |
+| M0        | Bootstrap & Core                                               |
+| M1        | Routing & HTTP                                                 |
+| M2        | ORM & Database                                                 |
+| M3        | Auth, Middleware & Validation                                  |
+| M4        | Queue, Cache, Scheduling & Events                              |
+| M5        | DX, CLI & Testing                                              |
+| M6        | Advanced (Broadcasting, Search, Filesystem, AI SDK, Real-time) |
+
+:::warning
+**M2 is complete; M0, M1, and M3–M6 are partial.** The upstream `docs/milestones.md` is authoritative. See [Milestones](/docs/reference/milestones).
+:::

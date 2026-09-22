@@ -1,0 +1,86 @@
+---
+title: Milestones
+description: The M0–M6 roadmap, dependency order, and evidence-backed status.
+---
+
+Milestones are **dependency-ordered** — each builds only on predecessors, with no circular dependencies.
+
+| Milestone | Focus | Scope highlights |
+|---|---|---|
+| M0 | Bootstrap & Core | Application container, typed config loader, service provider DAG ordering, graceful shutdown |
+| M1 | Routing & HTTP | axum router, route groups, domain-aware routing, middleware stack, typed extractors, HTTP client |
+| M2 | ORM & Database | Query builder, `#[derive(Model)]`, migrations, seeders, factories, vector search |
+| M3 | Auth, Middleware & Validation | Guards (JWT + session), `#[authorize]`, origin-aware CSRF, throttle, validation rules |
+| M4 | Queue, Cache, Scheduling & Events | Typed jobs, queue routing, cache stores and locks, scheduler pause/resume, event dispatch |
+| M5 | DX, CLI & Testing | `cargo artisan`, 17 generators, declarative attributes, testcontainers harness |
+| M6 | Advanced | Broadcasting and real-time, search, filesystem, JSON:API, AI SDK, mail, presentation layers |
+
+## Status
+
+| Milestone | Status |
+|---|---|
+| M2 — ORM & Database | **Complete** |
+| M0, M1, M3, M4, M5, M6 | **Partial** |
+
+:::warning
+The upstream [`docs/milestones.md`](https://github.com/rustasea/framework/blob/master/docs/milestones.md) is **authoritative** for the evidence-backed done/partial/missing recap. This page summarizes it and can lag behind.
+:::
+
+## Notable open items
+
+- M0 — the scaffolded `AppServiceProvider` is still a no-op, and the config loader is not yet mounted during app boot.
+- M1 — URL generation and implicit route-model binding remain open.
+- M4 — the in-process `sync` driver keeps failed jobs in memory.
+- M5 — generated controllers leave route registration manual; Docker-gated integration tests are opt-in.
+- M6 — Gemini and Bedrock have no AI adapter; embeddings fall back to a deterministic stub.
+
+## Laravel 13 parity
+
+Every Laravel 13.0.0 headline feature is mapped to the milestone that delivers its equivalent. The mapping covers 20 features, including:
+
+| Laravel 13 feature | Type | Milestone |
+|---|---|---|
+| AI SDK (`laravel/ai`) | New | M6 |
+| AI Agents (tools, streaming, MCP, queueing) | New | M6 |
+| JSON:API Resources | New | M6 |
+| Queue routing by class | New | M4 |
+| Cache `touch()` | New | M4 |
+| Semantic / vector search | New | M2 + M6 |
+| Expanded declarative attributes | New | M5 |
+| Read-through filesystem | New | M6 |
+| Schedule pause / resume | New | M4 |
+| Request forgery protection | Improved | M3 |
+| Cache & session hardening | Improved | M3 / M4 |
+| Eloquent collection serialization | Improved | M2 |
+| Database upsert & delete | Improved | M2 |
+| Query builder additions | Improved | M2 |
+| Event / queue contract expansion | Improved | M4 |
+| Mail / notification defaults | Improved | M6 |
+| HTTP client & process | Improved | M1 |
+| Routing & validation | Improved | M1 / M3 |
+| Observability & tooling | Improved | M1 / M5 |
+
+Full mapping: [`docs/laravel-parity.md`](https://github.com/rustasea/framework/blob/master/docs/laravel-parity.md) and the [`docs/laravel-13-research.md`](https://github.com/rustasea/framework/blob/master/docs/laravel-13-research.md) brief.
+
+## Timeline
+
+:::info
+The public timeline (M0 in Q4 2026 through M6 in Q3–Q4 2027) is **aspirational** and will be refined after M0 ships. Each milestone is intended to ship as a tagged release with migration notes.
+:::
+
+| Milestone | Target |
+|---|---|
+| M0 | Q4 2026 |
+| M1 | Q4 2026 – Q1 2027 |
+| M2 | Q1 2027 |
+| M3 | Q1 – Q2 2027 |
+| M4 | Q2 2027 |
+| M5 | Q2 – Q3 2027 |
+| M6 | Q3 – Q4 2027 |
+
+## Learning resources
+
+- [`docs/milestones.md`](https://github.com/rustasea/framework/blob/master/docs/milestones.md) — authoritative status
+- [`docs/laravel-parity.md`](https://github.com/rustasea/framework/blob/master/docs/laravel-parity.md) — Laravel 13.x API adoption mapping
+- [`docs/adr/`](https://github.com/rustasea/framework/tree/master/docs/adr) — architecture decision records
+- [`.agents/documents/`](https://github.com/rustasea/framework/tree/master/.agents/documents) — requirements, design, testing, and module blueprints

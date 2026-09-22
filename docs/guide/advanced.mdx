@@ -1,0 +1,84 @@
+---
+title: Storage, AI & Real-time
+description: Read-through storage, the AI SDK and agents, JSON:API resources, broadcasting, and mail.
+---
+
+## Storage
+
+`Storage` is a facade over `object_store` 0.14 (S3/GCS/Azure) with a local disk on `tokio::fs`.
+
+| Capability       | Detail                                                          |
+| ---------------- | --------------------------------------------------------------- |
+| Read-through     | Primary plus fallback disk, with optional copy-on-read          |
+| Path confinement | `Storage::path()` never escapes the disk root                   |
+| Configuration    | `config/storage.toml` drives `StorageManager::from_toml`        |
+| SFTP             | Pure-Rust `russh` disk behind the opt-in `storage-sftp` feature |
+
+```bash
+cargo artisan make:controller UploadController
+```
+
+## AI SDK
+
+`rustasea-ai` defines a provider-agnostic trait with real HTTP adapters via `reqwest`. `provider_from_env()` supports **OpenAI, Anthropic, Azure, Groq, xAI, DeepSeek, Mistral, Ollama, OpenRouter**, and OpenAI-compatible endpoints. Gemini and Bedrock have no adapter yet and return `AiError::UnknownProvider`.
+
+Agents and tools are first-class:
+
+```bash
+cargo artisan make:agent SupportAgent
+cargo artisan make:tool SearchOrders
+```
+
+| Feature          | Detail                                                 |
+| ---------------- | ------------------------------------------------------ |
+| Contracts        | `Agent` trait with structured output and streaming     |
+| Composition      | Sub-agents, middleware, anonymous agents               |
+| Deferred loading | `SimilaritySearch`, `FileStorage`, `ToolSearch`        |
+| Queueing         | `AgentRunJob` for background agent runs                |
+| MCP              | Client and registry for consuming external MCP servers |
+
+```rust
+let agent = SupportAgent::new()
+    .with_tool(SearchOrders)
+    .stream("Where is my order?")
+    .await?;
+```
+
+## JSON:API resources
+
+`JsonApiResource` is `serde`-based and renders `Content-Type: application/vnd.api+json`, with sparse fieldsets, relationship inclusion, links, and headers.
+
+## Broadcasting and real-time
+
+| Channel   | Detail                                                           |
+| --------- | ---------------------------------------------------------------- |
+| WebSocket | `axum` `ws` feature (enabled by default in `rustasea-broadcast`) |
+| SSE       | `Response::eventStream`                                          |
+| Trait     | `ShouldBroadcast`                                                |
+| Fan-out   | `broadcast-redis` and `broadcast-pusher` features                |
+| Security  | Channel authorization                                            |
+
+`config/broadcasting.toml` selects the connection; the in-process `hub` is the zero-dependency default, and `pusher`/`redis` connections are feature-gated.
+
+## Presentation layers
+
+| Crate                                        | Purpose                                                              |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| `rustasea-view`                              | askama (default, build-time compile) and minijinja (opt-in, runtime) |
+| `rustasea-inertia` + `-client` + `-adapters` | Inertia server, WASM client, and React/Vue/Svelte adapters           |
+| `rustasea-livewire`                          | askama components with HTMX swaps                                    |
+
+## Mail and notifications
+
+`rustasea-mail` provides `Mailable`, `Mailer` implementations (`ArrayMailer`, `LogMailer`, `SmtpMailer`), and queued notifications with `#[deleteWhenMissingModels]`.
+
+## Observability
+
+Both are off by default:
+
+- **`rustasea-debugbar`** — per-request SQL/cache/event capture into an in-memory ring buffer with a JSON/HTML surface.
+- **`rustasea-queue-dashboard`** — live queue depth and age, `queue_metrics` history with retention, failed-job retry/forget, and worker heartbeats.
+
+:::info
+M6 is partial. Broadcast WS + SSE, read-through storage, JSON:API, mail, the presentation crates, real HTTP AI providers, AI queueing, and feature-gated `pgvector` are implemented. Embeddings fall back to a deterministic stub unless a provider is configured.
+:::

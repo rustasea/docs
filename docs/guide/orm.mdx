@@ -1,0 +1,77 @@
+---
+title: ORM & Database
+description: The sqlx-backed query builder, models, migrations, seeders, factories, and vector search.
+---
+
+The ORM (`rustasea-orm`) provides a fluent, chainable query builder over `sqlx` with drivers for **Postgres, MySQL, SQLite, and MongoDB** (feature-gated).
+
+## Query builder
+
+| Group       | Methods                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| Filtering   | `where`, `orWhere`, `whereJson*`, `whereBinary`, `chunkBy`, `orWhereKey`                                           |
+| Fetching    | `find`, `first`, `firstOrFail`, `paginate`, `cursor`                                                               |
+| Writing     | `create`, `save`, `update`, `delete`, `forceDelete`, `insertOrIgnoreReturning`, `saveOrIgnore`, `refreshForUpdate` |
+| Inspection  | `toSql`, `toRawSql`                                                                                                |
+| Concurrency | Transactions, pessimistic locks, raw queries                                                                       |
+| Extras      | Scopes, upsert with strict `uniqueBy`, MySQL `DELETE JOIN`                                                         |
+
+## Models
+
+`#[derive(Model)]` supplies `id`, `created_at`, `updated_at`, and `deleted_at` (soft deletes), with a `snake_plural` table convention.
+
+```rust
+#[derive(Model)]
+struct Post {
+    id: i64,
+    title: String,
+    body: String,
+}
+```
+
+Inspect a model without reading its source:
+
+```bash
+cargo artisan show:model Post --json
+```
+
+## Migrations
+
+Migrations run through a custom `Migrator` with versioned, reversible steps:
+
+```bash
+cargo artisan make:migration create_posts_table
+cargo artisan migrate
+cargo artisan migrate:fresh          # destructive: refused in production without --force
+cargo artisan migrate:rollback --step 2
+```
+
+Connection resolution prefers `DATABASE_URL`, then `DATABASE__URL`, then `config/database.toml`. Migrations are database-agnostic, and seeders and factories are supported for test data.
+
+## Vector search
+
+Semantic search is part of the data layer, not an add-on: `whereVectorSimilarTo` and a `vector` column type ship alongside the query builder, backed by `pgvector` behind the `vector` feature.
+
+```rust
+Post::query()
+    .whereVectorSimilarTo("embedding", query_embedding, 10)
+    .get()
+    .await?
+```
+
+`dropVectorIndex` and `Str::toEmbeddings` round out the surface. `MemoryVectorStore` is the default; `PgVectorStore` executes real similarity queries when the `pgvector` feature is enabled. Embeddings currently fall back to a deterministic stub unless a provider is configured.
+
+## Example application
+
+The runnable `rustasea-app` binary ships a small, compiling example of the scaffold's `app/` layout:
+
+- an Eloquent-style `Post` model with an in-memory `PostRepository`
+- a JSON CRUD `PostController` implementing the base `Controller` trait
+- `StorePostRequest` / `UpdatePostRequest` validatable form requests
+- a `CreatePostAction` demonstrating the [Action pattern](/docs/guide/cli-testing)
+
+Routes are registered in `routes/examples.rs` and served at `/examples/posts` (index, show, store, update, destroy).
+
+:::info
+M2 is the **complete** milestone. Collection serialization preserves eager-loaded relations through a `serde` round-trip.
+:::

@@ -1,0 +1,44 @@
+---
+title: Tech Stack
+description: The crates, libraries, and rationale behind each layer of the framework.
+---
+
+| Layer | Crate | Rationale |
+|---|---|---|
+| Async runtime | `tokio` | De-facto async runtime; powers `axum`, `sqlx`, `deadpool`, and queue workers |
+| HTTP | `axum` + `tower` + `tower-http` | Extractor-based routing with composable middleware; preferred over `actix-web` for tokio alignment and simpler ownership |
+| ORM / DB | `sqlx` | Runtime-checked queries (no compile-time `query!` macros); `pgvector` behind the `vector` feature; named connections with read/write split |
+| Pooling | `sqlx` pool + `deadpool-redis` | Driver-native pooling; no `bb8` |
+| Migrations | Custom `Migrator` | Versioned, reversible migrations (`run`/`rollback`/`fresh`/`seed`) |
+| Validation | `validator` + `rustasea-validation` | Derive macros for struct rules; custom crate for `ErrorBag` + FormRequest |
+| Auth | `jsonwebtoken` + `argon2` + `tower-sessions` | JWT guards, password hashing, JSON session store |
+| Auth log | `rustasea-authlog` | One row per login, failed attempt, lockout, and logout; unseen-IP logins notify through `rustasea-mail` |
+| Activity log | `rustasea-activitylog` | Opt-in `#[logs_activity]` model audit trail with JSON property diff |
+| Serialization | `serde` + `serde_json` | Powers config, JSON:API, queue payloads, session store |
+| Config | `config` + `dotenvy` | Layered `config/*.toml` + env overlay with `__` separator; TOML only |
+| Localization | `rustasea-i18n` | TOML/JSON dictionaries with dot-namespaced lookup and pluralization |
+| CLI | `clap` (derive) + `cargo xtask` | `cargo artisan` subcommands; `dialoguer`/`indicatif` for prompts and progress |
+| Proc-macros | `syn` + `quote` + `proc-macro2` | `#[route]`, `#[middleware]`, `#[validate]`, `#[derive(Model)]`, `#[tries]`, … |
+| Modules | `rustasea-modules` | Deterministic `ModuleRegistry` mounting routes, providers, and migrations |
+| Action pattern | `rustasea-action` | One typed unit of work across HTTP/queue/CLI/events |
+| Queue | `tokio` + `deadpool-redis` + `serde_json` | `database` and `redis` drivers plus a worker loop; in-house exponential backoff |
+| Cache | Lock-guarded memory store + `deadpool-redis` | `MemoryStore` (not `moka`); real `RedisStore` behind the `redis` feature |
+| Scheduling | Hand-rolled cron + `tokio` interval | 5-field cron parser on a 60-second ticker; no cron crate |
+| Templating | `askama` (default) + `minijinja` (opt-in) | Build-time compiled templates by default; runtime templates behind a feature |
+| WebSocket / SSE | `axum` (`ws`) + SSE | `axum/ws` enabled by default; no `tokio-tungstenite` |
+| HTTP client | `reqwest` | Laravel-style `throw`/`try_throw` callbacks with typed `HttpError` |
+| Filesystem | `object_store` + `tokio::fs` | S3/GCS/Azure abstraction with read-through disks and path confinement |
+| SFTP disk | `russh` + `russh-sftp` | Pure-Rust SFTP behind the opt-in `storage-sftp` feature |
+| Excel / CSV | `csv` + `calamine` + `rust_xlsxwriter` | Streaming import/export with queued jobs (`excel` feature) |
+| Image | `image` | Fluent transform pipeline with EXIF auto-orient (`image` feature) |
+| Google auth | `jsonwebtoken` + `reqwest` | Service-account RS256 assertion exchanged for a cached bearer token (`google` feature) |
+| Observability | `rustasea-debugbar` + `rustasea-queue-dashboard` | Request profiler and queue metrics, both off by default |
+| Vector / AI | `pgvector` + real HTTP providers | `PgVectorStore` behind a feature; OpenAI, Anthropic, Azure, Groq, xAI, DeepSeek, Mistral, Ollama, OpenRouter |
+| Testing | `testcontainers` + `cargo test` | Isolated Postgres via `PostgresTestDb`; Docker-gated integration suite |
+| Lint / Format | `rustfmt` + `clippy` | Enforced in CI; generated code is `rustfmt`-clean |
+
+## Runtime support
+
+- **MSRV:** Rust 1.88
+- **CI gates:** `cargo xtask ci`, `cargo test --workspace`, `cargo deny check`, `cargo audit`, plus an MSRV job
+- **Licence:** MIT

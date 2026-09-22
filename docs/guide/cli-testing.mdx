@@ -1,0 +1,84 @@
+---
+title: CLI & Testing
+description: cargo artisan generators, the module and action patterns, and the testing harness.
+---
+
+## cargo artisan
+
+```bash
+cargo install rustasea        # ships the cargo-rustasea binary
+cargo artisan list            # 37 default commands, plus feature-gated mcp:serve
+cargo artisan list --json     # machine-readable metadata
+```
+
+`cargo rustasea` is the cargo subcommand; `cargo artisan` is the in-app alias.
+
+## Generators
+
+17 scaffolds. `{name}` is PascalCase (snake_case for `make:migration`); `--force` overwrites.
+
+```bash
+cargo artisan make:controller UserController --resource
+cargo artisan make:model Post --migration
+cargo artisan make:request StorePostRequest
+cargo artisan make:job SendWelcomeEmail
+cargo artisan make:test PostFeatureTest --browser
+```
+
+Also available: `make:middleware`, `make:provider`, `make:command`, `make:event`, `make:listener`, `make:observer`, `make:seeder`, `make:agent`, `make:tool`, `make:action`, `make:module`.
+
+:::warning
+Generated controllers leave route registration **manual** — `make:controller` scaffolds the type, you wire it into `routes/web.rs`. Generated code is `rustfmt`-clean and compiles.
+:::
+
+## Modules
+
+Module state is discovered from `modules/<name>/` and persisted in the `[modules]` table of `rustasea.toml` (or `config/modules.toml`). Enabling an unknown name is rejected before the manifest is written.
+
+```bash
+cargo artisan module:list --json
+cargo artisan module:enable billing
+cargo artisan module:disable billing
+```
+
+The `Module` contract plus a deterministic `ModuleRegistry` mounts each enabled module's routes, providers, and migrations. Opt-in via the `modules` feature.
+
+## Action pattern
+
+One typed unit of work runs through four adapters with an identical `validate` → `authorize` → `handle` pipeline:
+
+| Adapter            | Surface               |
+| ------------------ | --------------------- |
+| `ActionController` | HTTP (`http` feature) |
+| `ActionJob`        | Queue (`queue`)       |
+| `ActionCommand`    | CLI                   |
+| `ActionListener`   | Events (`events`)     |
+
+Opt-in via the `action` feature; scaffold one with `make:action`.
+
+## Localization and logging
+
+| Command                                                             | Purpose                                                                                 |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `lang:check --locale`                                               | Missing, unused, and duplicate translation entries (missing/duplicate fail the command) |
+| `log:show --level --channel --since --grep --limit --follow --json` | Filter and tail the application log                                                     |
+| `tinker`                                                            | Interactive REPL over a booted app; piped stdin scripts the session                     |
+
+## Testing
+
+| Piece     | Detail                                                                     |
+| --------- | -------------------------------------------------------------------------- |
+| Harness   | `TestCase` plus `cargo test` integration                                   |
+| Database  | `testcontainers`-backed isolated Postgres via the `PostgresTestDb` fixture |
+| Factories | `Factory::create` with the `Str` factory reset between tests               |
+| Browser   | WebDriver e2e harness under `tests/browser/` behind the `browser` feature  |
+| Faker     | Locale-aware fake-data generation behind the `faker` feature               |
+
+```bash
+cargo test --workspace
+cargo test -p rustasea --features integration -- --ignored
+```
+
+## Console UX
+
+Commands declare typed args and flags through `clap`, and the console layer supports `ask`, `secret`, `confirm`, `choice`, and `multiSelect` prompts, plus `table`, `progressBar`, and `spinner` output, graceful shutdown via `Shutdownable`, and programmatic `Artisan::call()`.

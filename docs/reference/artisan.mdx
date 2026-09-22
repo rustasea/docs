@@ -1,0 +1,97 @@
+---
+title: Artisan Commands
+description: The cargo artisan command surface — generators, modules, routing, database, queue, and AI tools.
+---
+
+`cargo artisan <command>` runs the framework console. The registry ships **37 default commands**, plus the feature-gated `mcp:serve`.
+
+```bash
+cargo artisan list            # live command surface
+cargo artisan list --json     # machine-readable metadata
+cargo artisan list --all      # include hidden commands
+```
+
+## Generators (`make:*`)
+
+| Command | Purpose |
+|---|---|
+| `make:controller {name} [--resource] [--force]` | HTTP controller |
+| `make:middleware {name} [--force]` | axum HTTP middleware |
+| `make:request {name} [--force]` | Validated form request |
+| `make:model {name} [-m] [--force]` | ORM model (+ optional migration) |
+| `make:provider {name} [--force]` | Service provider |
+| `make:command {name} [--force]` | Console command |
+| `make:job {name} [--force]` | Queue job |
+| `make:event {name} [--force]` | Domain event |
+| `make:listener {name} [--force]` | Event listener |
+| `make:observer {name} [--force]` | Model lifecycle observer |
+| `make:test {name} [--force] [--browser]` | Feature test, or browser e2e with `--browser` |
+| `make:seeder {name} [--force]` | Database seeder |
+| `make:migration {name} [--force]` | Database migration (snake_case name) |
+| `make:agent {name} [--force]` | AI agent scaffold |
+| `make:tool {name} [--force]` | AI tool scaffold |
+| `make:action {name} [--force]` | Action class |
+| `make:module {name} [--force]` | Modular application crate |
+
+## Modules
+
+| Command | Purpose |
+|---|---|
+| `module:list [--json]` | List discovered modules with status and version |
+| `module:enable {name}` | Mark a module enabled |
+| `module:disable {name}` | Mark a module disabled |
+
+## Routing & introspection
+
+| Command | Purpose |
+|---|---|
+| `route:list [--json]` | Live route table (Method, URI, Name, Action, Middleware, Binding) |
+| `show:model {name} [--json]` | Model source metadata — attributes, casts, soft deletes, relations |
+| `openapi:generate [--output=openapi.json] [--pretty]` | OpenAPI 3.1 spec from the live route table |
+| `tinker` | Interactive REPL over a booted application |
+
+## Database & migrations
+
+| Command | Purpose |
+|---|---|
+| `migrate [--fresh] [--seed] [--force]` | Run pending migrations |
+| `migrate:fresh [--seed] [--force]` | Drop all tables and re-run every migration |
+| `migrate:rollback [--step N]` | Roll back the last N migration batches (default 1) |
+
+## Queue & schedule
+
+| Command | Purpose |
+|---|---|
+| `queue:work [--queue=default] [--max-jobs=1]` | Process jobs from the database queue |
+| `queue:failed` | List dead-lettered jobs |
+| `queue:retry {id}` | Retry a failed job by id |
+| `schedule:list [--json]` | List scheduled commands |
+| `schedule:run` | Run due scheduled commands once |
+| `schedule:pause` / `schedule:resume` | Pause or resume scheduled dispatch |
+
+## Localization & logging
+
+| Command | Flags | Purpose |
+|---|---|---|
+| `lang:check` | `--locale`, `--path`, `--json` | Missing, unused, and duplicate translation entries |
+| `log:show` | `--level`, `--channel`, `--since`, `--grep`, `--limit`, `--follow`, `--json` | Filter and tail the application log |
+
+## AI agent workflows (feature-gated)
+
+| Command | Purpose |
+|---|---|
+| `mcp:serve` | Serve project knowledge (routes, docs, commands, redacted config) over MCP stdio |
+
+Requires the `mcp` (`ai-mcp`) cargo feature; a build without it does not register the command. See [AI Agents & MCP](/docs/getting-started/mcp).
+
+## Workspace tasks
+
+Beyond `cargo artisan`, the `xtask` harness covers CI and local development:
+
+| Command | Purpose |
+|---|---|
+| `cargo xtask ci` | fmt + clippy + deps:check + lines:check + check-cycles |
+| `cargo xtask fmt` / `clippy` | Individual quality checks |
+| `cargo xtask check-cycles` | Real workspace DAG cycle detection |
+| `cargo xtask migrate` | Run migrations |
+| `cargo xtask docker:up` / `logs` / `down` | Compose stack lifecycle |

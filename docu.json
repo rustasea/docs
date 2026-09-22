@@ -1,8 +1,8 @@
 {
   "$schema": "https://cdn.jsdelivr.net/npm/@docubook/flame/docu.schema.json",
   "meta": {
-    "title": "My Docs",
-    "description": "Documentation powered by DocuBook Flame",
+    "title": "RustaSea",
+    "description": "A Rust web application framework with Laravel's ergonomics and Rust's safety and performance.",
     "baseURL": "http://localhost:3000",
     "favicon": "/docs/assets/images/favicon.ico",
     "ogImage": "/docs/assets/images/og.png"
@@ -11,22 +11,24 @@
     "context": "separator"
   },
   "themes": {
-    "colors": "default"
+    "colors": {
+      "primary": "#EE4712"
+    }
   },
   "home": {
     "hero": {
-      "tagline": "#MyDocs",
-      "headline": "Documentation",
-      "description": "Welcome to your documentation site powered by DocuBook Flame.",
+      "tagline": "#RustaSea",
+      "headline": "Laravel ergonomics. Rust safety.",
+      "description": "RustaSea is a web application framework for Rust with expressive, elegant syntax — expressive routing, a DAG-ordered container, a fluent sqlx-backed ORM, queues, events, and AI-native tooling.",
       "actions": [
         {
           "text": "Get Started",
-          "link": "/docs",
+          "link": "/docs/getting-started/overview",
           "theme": "primary"
         },
         {
           "text": "GitHub",
-          "link": "https://github.com/gitfromwildan",
+          "link": "https://github.com/rustasea/framework",
           "theme": "ghost",
           "icon": "github"
         }
@@ -34,31 +36,31 @@
     },
     "features": [
       {
-        "icon": "Zap",
-        "title": "Lightning Fast",
-        "description": "Powered by Bun for instant builds and hot module replacement.",
-        "link": "/docs"
+        "icon": "Route",
+        "title": "Typed Routing",
+        "description": "An axum-backed router with typed extractors, route groups, domain-aware dispatch, and proc-macro attributes.",
+        "link": "/docs/guide/routing"
       },
       {
-        "icon": "Paintbrush",
-        "title": "Themeable",
-        "description": "Customize with Tailwind CSS and DaisyUI for beautiful documentation.",
-        "link": "#"
+        "icon": "Database",
+        "title": "Fluent ORM",
+        "description": "A sqlx-backed query builder with #[derive(Model)], migrations, seeders, factories, and vector search.",
+        "link": "/docs/guide/orm"
       },
       {
-        "icon": "Search",
-        "title": "Full-Text Search",
-        "description": "Built-in search for easy content discovery.",
-        "link": "#"
+        "icon": "Bot",
+        "title": "Agentic Development",
+        "description": "Expose routes, models, config, and docs to AI coding agents over the Model Context Protocol.",
+        "link": "/docs/getting-started/mcp"
       }
     ]
   },
   "navbar": {
     "logo": {
-      "src": "/docs/assets/images/docu.svg",
-      "alt": "DocuBook"
+      "src": "/docs/assets/images/logo.svg",
+      "alt": "RustaSea"
     },
-    "logoText": "My Docs",
+    "logoText": "RustaSea",
     "menu": [
       {
         "title": "Home",
@@ -67,6 +69,10 @@
       {
         "title": "Docs",
         "href": "/docs"
+      },
+      {
+        "title": "GitHub",
+        "href": "https://github.com/rustasea/framework"
       }
     ]
   },
@@ -74,9 +80,9 @@
     "social": []
   },
   "repo": {
-    "url": "https://github.com/DocuBook/docubook",
-    "path": "blob/main/{filePath}",
-    "edit": false
+    "url": "https://github.com/rustasea/framework",
+    "path": "blob/master/{filePath}",
+    "edit": true
   },
   "routes": [
     {
@@ -89,7 +95,9 @@
       },
       "items": [
         { "title": "Overview", "href": "/overview" },
-        { "title": "Configuration", "href": "/configuration" }
+        { "title": "Installation", "href": "/installation" },
+        { "title": "Configuration", "href": "/configuration" },
+        { "title": "AI Agents & MCP", "href": "/mcp" }
       ]
     },
     {
@@ -101,9 +109,28 @@
         "title": "Guide"
       },
       "items": [
-        { "title": "Components", "href": "/components" },
-        { "title": "Routing", "href": "/routing" },
+        { "title": "Architecture", "href": "/architecture" },
+        { "title": "Routing & HTTP", "href": "/routing" },
+        { "title": "ORM & Database", "href": "/orm" },
+        { "title": "Auth & Validation", "href": "/auth" },
+        { "title": "Queues, Cache & Events", "href": "/queues" },
+        { "title": "CLI & Testing", "href": "/cli-testing" },
+        { "title": "Storage, AI & Real-time", "href": "/advanced" },
         { "title": "Deployment", "href": "/deployment" }
+      ]
+    },
+    {
+      "title": "Reference",
+      "href": "/reference",
+      "noLink": true,
+      "context": {
+        "icon": "Library",
+        "title": "Reference"
+      },
+      "items": [
+        { "title": "Artisan Commands", "href": "/artisan" },
+        { "title": "Tech Stack", "href": "/tech-stack" },
+        { "title": "Milestones", "href": "/milestones" }
       ]
     }
   ]

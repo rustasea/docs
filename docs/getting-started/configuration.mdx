@@ -1,30 +1,82 @@
 ---
 title: Configuration
-description: docu.json reference — meta, navbar, themes, routes, and plugins.
+description: Typed TOML configuration, file discovery order, and environment overlay.
 ---
 
-`docu.json` in the project root controls the whole site. It is validated against `docu.schema.json`.
+RustaSea reads typed configuration from TOML files in `config/`. The loader (`rustasea_config::ConfigLoader`) **auto-discovers every `config/*.toml`**:
 
-## First edits
+1. `app.toml` is always applied first, as the base layer.
+2. Remaining files are merged in sorted order.
+3. The process environment is applied last — **environment variables always win over files**.
 
-| What | Where |
-|---|---|
-| Site name & tagline | `meta.title`, `meta.description` |
-| Brand in the header | `navbar.logoText` |
-| Landing copy | `home.hero` — headline, description, actions |
-| Colour preset | `themes.colors` — `default`, `freshlime`, `coffee` |
-| Footer links | `footer.social` |
+`.env` files are supported via `dotenvy`.
 
-## Reference
+## Environment overrides
 
-| Field | Description |
-|---|---|
-| `meta` | Site title, description, favicon, base URL |
-| `navbar` | Logo, navigation menu links |
-| `home.hero` | Landing page hero — tagline, headline, actions |
-| `home.features` | Feature cards — icon, title, description |
-| `routes` | Sidebar navigation (auto-detected from `docs/` when empty) |
-| `themes` | Colour preset or custom palette |
-| `plugins` | Build/dev pipeline extensions |
+**Nested keys** use the `__` separator. `SERVICES__POSTMARK__KEY` sets `[services.postmark].key`.
 
-This project's `docu.json` is a complete working example — edit it and the dev server applies the changes live.
+**Laravel-style single-underscore vars** are applied by typed consumers where wired:
+
+| Prefix                                                                                            | Target           |
+| ------------------------------------------------------------------------------------------------- | ---------------- |
+| `APP_*`                                                                                           | `AppConfig`      |
+| `LOG_*`                                                                                           | `LoggingConfig`  |
+| `MAIL_*`                                                                                          | `MailConfig`     |
+| `POSTMARK_API_KEY`, `RESEND_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SLACK_BOT_*` | `ServicesConfig` |
+
+## Config files
+
+| File                       | Purpose                                                        |
+| -------------------------- | -------------------------------------------------------------- |
+| `config/app.toml`          | Application identity, locale, encryption key, maintenance mode |
+| `config/auth.toml`         | Guards, providers, password-reset brokers                      |
+| `config/cache.toml`        | Default store, key prefix, store definitions                   |
+| `config/database.toml`     | Named SQL/Redis connections, pool tuning, migrations           |
+| `config/queue.toml`        | Default connection, driver connections, batching, failed jobs  |
+| `config/session.toml`      | Session driver, lifetime, cookie policy                        |
+| `config/fortify.toml`      | Auth feature toggles, route surface, limiters                  |
+| `config/logging.toml`      | Default channel, deprecations, named channels                  |
+| `config/mail.toml`         | Default mailer, sender, named mailers                          |
+| `config/services.toml`     | Third-party credentials (Postmark, Resend, AWS SES, Slack)     |
+| `config/storage.toml`      | Default disk, read-through routing, disk definitions           |
+| `config/mongo.toml`        | Standalone MongoDB connection                                  |
+| `config/broadcasting.toml` | Broadcast connection and driver tables                         |
+| `config/cors.toml`         | CORS allow-list and credentials flag                           |
+
+Key environment variables include `APP_NAME`, `APP_ENV`, `APP_DEBUG`, `APP_URL`, `APP_KEY`, `APP_LOCALE`, `DATABASE_URL`, `DB_*`, `REDIS_*`, `QUEUE_CONNECTION`, `SESSION_*`, `MAIL_*`, and `BROADCAST_CONNECTION`.
+
+## Database connections
+
+`rustasea-orm` owns config-driven named connections, resolved lazily by `ConnectionResolver`. Both a legacy flat `database.url` and explicit `[database.connections.<name>]` tables are supported.
+
+```toml
+[database]
+default = "pgsql"          # connection used when no name is given
+
+[database.connections.sqlite]
+driver = "sqlite"
+url = "sqlite://database.sqlite?mode=rwc"
+
+[database.connections.pgsql]
+driver = "postgres"
+host = "127.0.0.1"
+port = 5432
+database = "rustasea"
+username = "rustasea"
+password = "secret"
+```
+
+- **Default switching** — `[database].default` names the connection used by `resolve(None)`; an explicit name overrides it.
+- **Read/write split** — add an optional `[database.connections.<name>.read]` (and/or `.write`) overlay to route reads to a replica. Omitted fields inherit the primary.
+- **MongoDB** — a connection with `driver = "mongodb"` resolves to a `DatabaseConnection::Mongo` handle behind the opt-in `mongodb` feature; without it, the connection resolves to a typed `ConnectionError::UnsupportedDriver` rather than panicking.
+
+```toml
+[database.connections.mongo]
+driver = "mongodb"
+uri = "mongodb://127.0.0.1:27017"
+database = "rustasea"
+```
+
+:::info
+`MIGRATE:fresh`-style destructive operations are refused in production unless you pass `--force` (see [CLI & Testing](/docs/guide/cli-testing)).
+:::
