@@ -1,5 +1,8 @@
+<p align="center"><img src="/docs/assets/images/logo.png" width="460" alt="RustaSea Logo">
+</p>
+
 <h1 align="center" style="font-size: 32px;">
-  RustaSea Documentation 🌊
+  RustaSea Documentation
 </h1>
 
 <p align="center" style="font-size: 20px;">
