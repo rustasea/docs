@@ -14,8 +14,5 @@
   },
   "dependencies": {
     "@docubook/flame": "^2.0.3"
-  },
-  "patchedDependencies": {
-    "@docubook/flame@2.0.3": "patches/@docubook%2Fflame@2.0.3.patch"
   }
 }
