@@ -63,8 +63,12 @@
     "logoText": "RustaSea",
     "menu": [
       {
-        "title": "Docs",
+        "title": "Home",
         "href": "/docs"
+      },
+      {
+        "title": "Docs",
+        "href": "/docs/getting-started/overview"
       },
       {
         "title": "GitHub",

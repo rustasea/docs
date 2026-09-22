@@ -1,0 +1,93 @@
+
+
+diff --git a/.docu/components/Sidebar.tsx b/.docu/components/Sidebar.tsx
+index 6fa972603576d8be4621e28636ad974847cf4779..3c2b1b99c82bad28c5810967597de5ba8c6622c6 100644
+--- a/.docu/components/Sidebar.tsx
++++ b/.docu/components/Sidebar.tsx
+@@ -41,7 +41,7 @@ function DesktopSidebar({ className, repoUrl }: { className?: string; repoUrl?:
+     <div className={cn("flex h-full flex-col", className)}>
+       {/* Logo */}
+       <div className="flex h-14 shrink-0 items-center px-5">
+-        <a href="/" className="flex items-center gap-2">
++        <a href="/docs" className="flex items-center gap-2">
+           {docuConfig.navbar?.logo?.src && (
+             <img
+               src={docuConfig.navbar.logo.src}
+diff --git a/.docu/node/build.ts b/.docu/node/build.ts
+index dac20039cb359e9a5c13b8e3860eda93d11e1443..fe77a7f9cd89c952e0aa0ddeaa5e39307251eeb1 100644
+--- a/.docu/node/build.ts
++++ b/.docu/node/build.ts
+@@ -243,8 +243,8 @@ async function renderDocsPage(
+   const headExtra = builder?.collectHead(ctx);
+   const bodyExtra = builder?.collectBody(ctx);
+ 
+-  const depth = slug ? slug.split("/").length : 1;
+-  const favicon = docuConfig.meta?.favicon || DEFAULT_FAVICON;
++  const depth = slug ? slug.split("/").length : 0;
++  const favicon = (docuConfig.meta?.favicon || DEFAULT_FAVICON).replace(/^\/docs(?=\/)/, "");
+   const seo = buildSeoMeta(docuConfig, frontmatter, slug || "");
+   // Parity with build.impl.ts: static hosts without header control (GitHub
+   // Pages) rely on the <meta> CSP for the per-page script policy.
+@@ -308,7 +308,7 @@ async function build() {
+   await mkdir(DIST_DIR, { recursive: true });
+   await mkdir(ASSETS_DIR, { recursive: true });
+ 
+-  await copyDirectoryRecursive(DOCS_ASSETS_DIR, join(DIST_DIR, "docs", "assets"));
++  await copyDirectoryRecursive(DOCS_ASSETS_DIR, join(DIST_DIR, "assets"));
+ 
+   const mdxFiles = await scanMdxFiles(DOCS_DIR);
+   const cache = args.force ? {} : await readCache();
+@@ -425,7 +425,7 @@ async function build() {
+     const rebuildDecision = shouldRebuild(file.path, file.mtime, cache);
+ 
+     if (rebuildDecision === "no" && !builder) {
+-      const outputPath = join(DIST_DIR, "docs", `${file.path}.html`);
++      const outputPath = join(DIST_DIR, `${file.path}.html`);
+       if (existsSync(outputPath) && !assetsChanged) {
+         skipped++;
+         continue;
+@@ -447,7 +447,7 @@ async function build() {
+       const cached = cache[file.path];
+       if (isCacheEntry(cached) && cached.hash === contentHash) {
+         if (!assetsChanged) {
+-          const outputPath = join(DIST_DIR, "docs", `${file.path}.html`);
++          const outputPath = join(DIST_DIR, `${file.path}.html`);
+           if (existsSync(outputPath)) {
+             cache[file.path] = { ...cached, mtime: file.mtime, builtAt: Date.now() };
+             skipped++;
+@@ -472,7 +472,7 @@ async function build() {
+           builder,
+           pageNonce
+         );
+-        const outputPath = join(DIST_DIR, "docs", `${capturedFile.path}.html`);
++        const outputPath = join(DIST_DIR, `${capturedFile.path}.html`);
+         await mkdir(dirname(outputPath), { recursive: true });
+         await writeFile(outputPath, html);
+         cache[capturedFile.path] = {
+@@ -505,17 +505,12 @@ async function build() {
+         builder,
+         generateNonce()
+       );
+-      await mkdir(join(DIST_DIR, "docs"), { recursive: true });
+       await writeFile(join(DIST_DIR, "docs", "index.html"), indexHtml);
+     } catch (err) {
+       const msg = err instanceof Error ? err.message : String(err);
+       errors.push(`index: ${msg}`);
+       console.error(`\n❌ Failed to build index: ${msg}\n`);
+     }
+-  } else {
+-    const msg = "docs root index: docs/index.mdx (or docs/index.md) not found";
+-    errors.push(`index: ${msg}`);
+-    console.error(`\n❌ Failed to build index: ${msg}\n`);
+   }
+ 
+   const landingPage = React.createElement(IndexPage);
+@@ -593,7 +588,7 @@ async function build() {
+       slug: f.path,
+       title: f.path.split("/").pop() || f.path,
+       filePath: join(DOCS_DIR, f.path),
+-      outputPath: join(DIST_DIR, "docs", `${f.path}.html`),
++      outputPath: join(DIST_DIR, `${f.path}.html`),
+     }));
+     await builder.runOnEnd(pages, { assetManifest, outDir: DIST_DIR });
+   }
