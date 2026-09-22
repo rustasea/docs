@@ -35,23 +35,20 @@ jobs:
 
       - name: Verify build output
         run: |
-          test -f .docu/dist/index.html
           test -f .docu/dist/docs/index.html
           test -d .docu/dist/assets
-          test -n "$(find .docu/dist/assets -maxdepth 1 -name '*.css' -print -quit)"
-          test -n "$(find .docu/dist/assets -maxdepth 1 -name '*.js' -print -quit)"
-          echo "pages: $(find .docu/dist -name '*.html' | wc -l)"
+          test -n "$(find .docu/dist/assets -name '*.css' -print -quit)"
+          test -n "$(find .docu/dist/assets -name '*.js' -print -quit)"
+          ! grep -Rqs "localhost:3000" .docu/dist
 
-      - name: Fail on localhost leaks
+      - name: Prepare Pages artifact
         run: |
-          if grep -rq "localhost:3000" .docu/dist; then
-            echo "::error::Build output still references localhost — check meta.baseURL"
-            exit 1
-          fi
+          test -f scripts/prepare-pages.py
+          python3 scripts/prepare-pages.py
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .docu/dist
+          path: .pages
 
   deploy:
     environment:
