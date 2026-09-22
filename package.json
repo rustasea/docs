@@ -1,14 +1,18 @@
 {
-  "name": "flame",
+  "name": "rustasea-docs",
   "private": true,
   "type": "module",
+  "engines": {
+    "bun": ">=1.1"
+  },
   "scripts": {
     "dev": "flame dev",
     "build": "NODE_ENV=production flame build",
     "preview": "flame preview",
-    "deploy": "flame deploy"
+    "deploy": "flame deploy",
+    "audit": "bun audit"
   },
   "dependencies": {
-    "@docubook/flame": "^2.0.2"
+    "@docubook/flame": "^2.0.3"
   }
 }
