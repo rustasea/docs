@@ -39,6 +39,7 @@ jobs:
           test -d .docu/dist/docs/assets
           rm -rf .pages
           mkdir -p .pages
+          cp -R .docu/dist/assets .pages/assets
           cp -R .docu/dist/docs/. .pages/
           cp .docu/dist/404.html .pages/404.html
           if [ -f .docu/dist/.nojekyll ]; then
@@ -50,7 +51,9 @@ jobs:
             cp .docu/dist/_headers .pages/_headers
           fi
           test -f .pages/index.html
-          test -d .pages/assets
+          test -n "$(find .pages/assets -maxdepth 1 -name '*.css' -print -quit)"
+          test -n "$(find .pages/assets -maxdepth 1 -name '*.js' -print -quit)"
+          test -d .pages/assets/images
           echo "pages: $(find .pages -name '*.html' | wc -l)"
 
       - name: Fail on localhost leaks
