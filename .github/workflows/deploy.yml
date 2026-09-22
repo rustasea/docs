@@ -41,8 +41,14 @@ jobs:
           mkdir -p .pages
           cp -R .docu/dist/docs/. .pages/
           cp .docu/dist/404.html .pages/404.html
-          cp .docu/dist/.nojekyll .pages/.nojekyll
-          cp .docu/dist/_headers .pages/_headers
+          if [ -f .docu/dist/.nojekyll ]; then
+            cp .docu/dist/.nojekyll .pages/.nojekyll
+          else
+            touch .pages/.nojekyll
+          fi
+          if [ -f .docu/dist/_headers ]; then
+            cp .docu/dist/_headers .pages/_headers
+          fi
           test -f .pages/index.html
           test -d .pages/assets
           echo "pages: $(find .pages -name '*.html' | wc -l)"
