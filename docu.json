@@ -64,6 +64,10 @@
     "logoText": "RustaSea",
     "menu": [
       {
+        "title": "Home",
+        "href": "/"
+      },
+      {
         "title": "Docs",
         "href": "/docs"
       },
@@ -77,7 +81,7 @@
     "social": []
   },
   "repo": {
-    "url": "https://github.com/rustasea/docs",
+    "url": "https://github.com/rustasea/rustasea.github.io",
     "path": "blob/main/{filePath}",
     "edit": true
   },

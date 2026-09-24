@@ -1,0 +1,54 @@
+---
+title: Introduction
+description: What RustaSea is, the principles behind it, and how to start.
+---
+
+RustaSea is a web application framework for Rust with expressive, elegant syntax — the developer experience that made [Laravel](https://laravel.com) the most loved PHP framework, without giving up what makes Rust great. It takes the pain out of development by easing the common tasks of many web projects:
+
+- **Simple, fast routing** with typed extractors and proc-macro attributes — [Routing & HTTP](/docs/guide/routing)
+- **Powerful dependency injection** with a DAG-ordered service container — [Architecture](/docs/guide/architecture)
+- Multiple back-ends for **session** and **cache** storage — [Auth & Validation](/docs/guide/auth), [Queues, Cache & Events](/docs/guide/queues)
+- An expressive, intuitive **database ORM** backed by `sqlx` — [ORM & Database](/docs/guide/orm)
+- Database-agnostic **schema migrations**, seeders, and factories
+- Robust **background job processing** on the `tokio` runtime — [Queues, Cache & Events](/docs/guide/queues)
+- **Real-time event broadcasting** over WebSocket, SSE, Pusher, and Redis — [Storage, AI & Real-time](/docs/guide/advanced)
+- **AI-native tooling** — routes, models, config, and docs exposed to coding agents over MCP — [AI Agents & MCP](/docs/getting-started/mcp)
+
+RustaSea is accessible, powerful, and provides the tools required for large, robust applications.
+
+## Core thesis
+
+> Laravel proves ergonomics and velocity win hearts; Rust proves safety and performance win production. RustaSea proves you can have both.
+
+Four design principles follow from that:
+
+- **Convention over configuration** — sensible defaults, explicit opt-out.
+- **Type safety as a feature** — generics, lifetimes, and traits replace runtime `any` blobs.
+- **Zero-cost ergonomics** — expressive APIs that compile away where possible.
+- **Incremental adoption** — use one crate or the full stack.
+
+## Start an application
+
+```bash
+cargo install rustasea
+cargo rustasea new example-app --variant blade
+cd example-app && cargo run
+```
+
+[Installation](/docs/getting-started/installation) covers the toolchain requirements and the variant matrix; [Configuration](/docs/getting-started/configuration) picks up from the booted app.
+
+## Agentic development
+
+RustaSea's predictable structure and conventions make it a good fit for AI coding agents such as Claude Code, Cursor, and GitHub Copilot. Every application can expose its knowledge surface over the Model Context Protocol:
+
+```bash
+cargo artisan mcp:serve   # requires the `ai-mcp` feature on the `rustasea` crate
+```
+
+Agents get route tables, model introspection (`show:model`), documentation, configuration, and `make:plan` scaffold planning — enough to build a RustaSea application while following the framework's conventions. See [AI Agents & MCP](/docs/getting-started/mcp).
+
+**Who is this for?** Teams that outgrew dynamic-language frameworks on performance, correctness, or concurrency — but do not want to outgrow the productivity that made them ship fast.
+
+:::warning
+RustaSea is **alpha**. Milestones are dependency-ordered (M0–M6) and every status note is evidence-backed: M2 is complete, while M0, M1, and M3–M6 are partial. Treat roadmap items as planned, not shipped — see [Milestones](/docs/reference/milestones).
+:::
