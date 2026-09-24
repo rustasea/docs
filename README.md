@@ -37,7 +37,7 @@ Everything below is driven by `docu.json`.
 | Tagline (hero) | `#RustaSea`                         |
 | Accent colour  | `#EE4712` (`themes.colors.primary`) |
 | Sidebar style  | `separator` (`sidebar.context`)     |
-| Base URL       | `http://localhost:3000`             |
+| Base URL       | `https://rustasea.github.io`        |
 | Logo           | `docs/assets/images/logo.svg`       |
 | Favicon        | `docs/assets/images/favicon.ico`    |
 | OG image       | `docs/assets/images/og.png`         |
