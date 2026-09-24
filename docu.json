@@ -3,8 +3,8 @@
   "meta": {
     "title": "RustaSea",
     "description": "A Rust web application framework with Laravel's ergonomics and Rust's safety and performance.",
-    "baseURL": "https://rustasea.github.io/docs",
-    "basePath": "",
+    "baseURL": "https://rustasea.github.io",
+    "basePath": "/docs",
     "favicon": "/docs/assets/images/favicon.ico",
     "ogImage": "/docs/assets/images/og.png"
   },
